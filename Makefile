@@ -1,18 +1,18 @@
 CC=gcc
-CCOPTS=--std=c17 -Wall 
+CCOPTS=--std=gnu99 -Wall
 AR=ar
-HEADERS=top_utils.h
-OBJS=top_utils.o
+HEADERS=top.h
+OBJS=top.o
 BINS=main
 
 .phony: clean all
 
 all: $(BINS)
 
-%.o:	%.c $(HEADERS)
+%.o: %.c $(HEADERS)
 	$(CC) $(CCOPTS) $(LDFLAGS) -c -o $@  $<
 
-main: main.c $(LIBS)
+main: main.c $(OBJS) 
 	$(CC) $(CCOPTS) $(LDFLAGS) -o top $^ 
 
 clean:

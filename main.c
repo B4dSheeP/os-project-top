@@ -2,14 +2,20 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <sys/types.h>
+#include <string.h>
+#include <unistd.h>
+#include <signal.h>
 
-enum Action{
+
+#include "top.h"
+
+typedef enum {
     PRINT,
     KILL,
     RESUME, 
     SUSPEND,
     TERMINATE
-};
+} Action;
 
 
 typedef struct{
@@ -23,29 +29,30 @@ typedef struct{
 Options* get_opts(int argc, char** argv){
     Options* opts = (Options*)malloc(sizeof(Options));
     //filling with default options
-    opts->delay_ms = 1000;
+    opts->delay_ms = 1000000;
     opts->filter_euid = 0;
     opts->pid = 0;
     opts->act = PRINT;
 
+    if(argc<2) return opts;
 
     if(!strcmp(argv[1], "kill")) opts->act = KILL;
-    if(!strcmp(argv[1], "resume")) opts->act = RESUME;
-    if(!strcmp(argv[1], "suspend")) opts->act = SUSPEND;
-    if(!strcmp(argv[1], "terminate")) opts->act = TERMINATE;
+    else if(!strcmp(argv[1], "resume")) opts->act = RESUME;
+    else if(!strcmp(argv[1], "suspend")) opts->act = SUSPEND;
+    else if(!strcmp(argv[1], "terminate")) opts->act = TERMINATE;
 
 
 
-    for(int i=2; i<argc; i++){
-        if(argv[i][0]=='-'){
-            
+    for(int i=1; i<argc; i++){
+        if(argv[i][0]=='-'){ 
             switch(argv[i][1]){
                 case 'd':
-                    opts->delay_ms = atoi(argv[i]+2);
+                    opts->delay_ms = 1000*atoi(argv[i]+2);
                     break;
                 case 'u':
                     opts->filter_euid = 1;
                     opts->euid = atoi(argv[i]+2);
+                    //lo implemento solo se mi rimane tempo
                     break;
                 case 'p':
                     opts->pid = atoi(argv[i]+2);
@@ -61,17 +68,21 @@ Options* get_opts(int argc, char** argv){
 
 int main(int argc, char** argv){
     Options* options = get_opts(argc, argv);
-    printf("%u, %u\n", options->euid, options->delay_ms);
+    //printf("%u, %u\n", options->euid, options->delay_ms);
     if(options->act == PRINT){
-            while(1){
-                //wipe terminal here
-                print_top();
-                //delay here
-            }
+        //set here a ctrl-c handler for safe exit
+        while(1){
+            //wipe terminal here
+            wipe_terminal();
+            print_top();
+            //printf("%d\n", options->delay_ms);
+            usleep(options->delay_ms);
+        }
     }
-    else if(options->act == KILL){}
-    else if(options->act == RESUME){}
-    else if(options->act == SUSPEND){}
-    else if(options->act == TERMINATE){}
+    else{
+        int signals[]={0, SIGKILL, SIGCONT, SIGSTOP, SIGTERM};
+        kill(options->pid, signals[options->act]);
+    }
+    free(options);
     exit(EXIT_SUCCESS);
 }
