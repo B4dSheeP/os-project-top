@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 #include <signal.h>
 
 
@@ -21,6 +22,7 @@ typedef enum {
 typedef struct{
     Action act;
     unsigned delay_ms;
+    unsigned limit;
     pid_t pid;
     bool filter_euid:1;
     uid_t euid;
@@ -33,6 +35,7 @@ Options* get_opts(int argc, char** argv){
     opts->filter_euid = 0;
     opts->pid = 0;
     opts->act = PRINT;
+    opts->limit = 0xFFFF;
 
     if(argc<2) return opts;
 
@@ -56,6 +59,8 @@ Options* get_opts(int argc, char** argv){
                     break;
                 case 'p':
                     opts->pid = atoi(argv[i]+2);
+                case 'l':
+                    opts->limit = atoi(argv[i]+2);
                 default:
                     break;
             }
@@ -73,10 +78,11 @@ int main(int argc, char** argv){
         //set here a ctrl-c handler for safe exit
         while(1){
             //wipe terminal here
-            wipe_terminal();
-            print_top();
-            //printf("%d\n", options->delay_ms);
-            usleep(options->delay_ms);
+            print_top(options->delay_ms, options->limit);
+            struct timespec ts = {.tv_sec=0, .tv_nsec=500000000};
+            struct timespec res;
+            nanosleep(&ts, &res);
+
         }
     }
     else{
