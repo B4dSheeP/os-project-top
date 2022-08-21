@@ -2,7 +2,7 @@
 
 
 #define error(s) if(1==1){ fprintf(stderr, "%s\n", s); exit(-1);};
-
+#define STATUSES "RSITZ"
 
 typedef struct {
     long long unsigned user_time;
@@ -10,31 +10,23 @@ typedef struct {
     long long unsigned sys_time;
     long long unsigned idle_time;
     long long unsigned iowait_time;
-    long long unsigned irq_time,
-    long long unsigned softirq_time,
-    long long unsigned steal_time,
-    long long unsigned guest_time,
-    long long unsigned guestnice_time
-
+    long long unsigned irq_time;
+    long long unsigned softirq_time;
+    long long unsigned steal_time;
+    long long unsigned guest_time;
+    long long unsigned guestnice_time;
 } Cpu;
 
-inline long long unsigned cpu_total(Cpu* cpu){
-    long long unsigned* cpu_as_array = (long long unsigned*)cpu;
-    long long unsigned r = 0;
-    for(int i=0; i<10; i++) r += cpu_as_array[i];
-    return r;
-}
-
-
 typedef struct {
-    unsigned total;
-    unsigned free;
-    unsigned used;
-    unsigned cache;
-    unsigned swap_total;
-    unsigned swap_free;
-    unsigned swap_used;
-    unsigned avail;
+    unsigned long total;
+    unsigned long free;
+    unsigned long avail; //used è total-free-buffers-cached
+    unsigned long buffers;
+    unsigned long cached;
+    unsigned long swap_total;
+    unsigned long swap_free; //swap used è total-free-swapcached
+    unsigned long swap_cached;
+    
 
 } Mem;
 

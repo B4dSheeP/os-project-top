@@ -31,7 +31,7 @@ typedef struct{
 Options* get_opts(int argc, char** argv){
     Options* opts = (Options*)malloc(sizeof(Options));
     //filling with default options
-    opts->delay_ms = 1000000;
+    opts->delay_ms = 1000;
     opts->filter_euid = 0;
     opts->pid = 0;
     opts->act = PRINT;
@@ -50,7 +50,7 @@ Options* get_opts(int argc, char** argv){
         if(argv[i][0]=='-'){ 
             switch(argv[i][1]){
                 case 'd':
-                    opts->delay_ms = 1000*atoi(argv[i]+2);
+                    opts->delay_ms = atoi(argv[i]+2);
                     break;
                 case 'u':
                     opts->filter_euid = 1;
@@ -77,12 +77,9 @@ int main(int argc, char** argv){
     if(options->act == PRINT){
         //set here a ctrl-c handler for safe exit
         while(1){
-            //wipe terminal here
             print_top(options->delay_ms, options->limit);
-            struct timespec ts = {.tv_sec=0, .tv_nsec=500000000};
-            struct timespec res;
+            struct timespec ts = {.tv_sec=0, .tv_nsec=500000000}, res;
             nanosleep(&ts, &res);
-
         }
     }
     else{
