@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <signal.h>
-
+#include <signal.h>
 
 #include "top.h"
 
@@ -73,14 +73,17 @@ Options* get_opts(int argc, char** argv){
 
 int main(int argc, char** argv){
     Options* options = get_opts(argc, argv);
-    //printf("%u, %u\n", options->euid, options->delay_ms);
+    
     if(options->act == PRINT){
-        //set here a ctrl-c handler for safe exit
-        while(1){
-            print_top(options->delay_ms, options->limit);
-            struct timespec ts = {.tv_sec=0, .tv_nsec=500000000}, res;
+        struct sigaction sa = {0};
+        sa.sa_handler = ctrlc_handler;
+        sigaction(SIGINT, &sa, NULL);
+        while(print_top(options->limit)){
+            llu_int delay_ns = options->delay_ms*1e6;
+            struct timespec ts = {.tv_sec=delay_ns/1000000000LL, .tv_nsec=delay_ns%1000000000LL}, res;
             nanosleep(&ts, &res);
         }
+        printf("GOODBYE! :-)\n");
     }
     else{
         int signals[]={0, SIGKILL, SIGCONT, SIGSTOP, SIGTERM};

@@ -4,17 +4,19 @@
 #define error(s) if(1==1){ fprintf(stderr, "%s\n", s); exit(-1);};
 #define STATUSES "RSITZ"
 
+typedef long long unsigned llu_int;
+
 typedef struct {
-    long long unsigned user_time;
-    long long unsigned userlow_time;
-    long long unsigned sys_time;
-    long long unsigned idle_time;
-    long long unsigned iowait_time;
-    long long unsigned irq_time;
-    long long unsigned softirq_time;
-    long long unsigned steal_time;
-    long long unsigned guest_time;
-    long long unsigned guestnice_time;
+    llu_int user_time;
+    llu_int userlow_time;
+    llu_int sys_time;
+    llu_int idle_time;
+    llu_int iowait_time;
+    llu_int irq_time;
+    llu_int softirq_time;
+    llu_int steal_time;
+    llu_int guest_time;
+    llu_int guestnice_time;
 } Cpu;
 
 typedef struct {
@@ -36,13 +38,13 @@ typedef struct {
     long int pr;
     long int ni;
     long unsigned virt;
-    long long unsigned starttime;
+    llu_int starttime;
     unsigned res;
     unsigned shr;
     char s;
     float cpu_percentage; 
     float mem_percentage;
-    long long unsigned cpu_time;
+    llu_int cpu_time;
     char command[200]; 
 
     long unsigned utime;
@@ -50,6 +52,6 @@ typedef struct {
 } Process;
 
 
-
-void print_top(unsigned, unsigned);
+bool print_top(unsigned);
 void wipe_terminal();
+void ctrlc_handler(int);

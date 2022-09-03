@@ -9,8 +9,12 @@
 #include <error.h>
 #include <stdbool.h>
 #include <fcntl.h>
+#include <signal.h>
 
 #include "top.h"
+
+
+static char exit_cond = 0;
 
 int dirent_cmp_on_name(const struct dirent** a, const struct dirent** b){
     return strcmp((*a)->d_name, (*b)->d_name);
@@ -39,9 +43,9 @@ int index_in_mem(const char* buf){
     return -1;
 }
 
-long long unsigned cpu_total(Cpu* cpu){
-    long long unsigned* cpu_as_array = (long long unsigned*)cpu;
-    long long unsigned r = 0;
+llu_int cpu_total(Cpu* cpu){
+    llu_int* cpu_as_array = (llu_int*)cpu;
+    llu_int r = 0;
     for(int i=0; i<10; i++) r += cpu_as_array[i];
     return r;
 }
@@ -82,10 +86,9 @@ Mem* get_mem(){
     char buf[100];
     while (fgets(buf, sizeof(buf), f) != NULL) {
 		char *c = strchr(buf, ':');
-		if (!c)
-			continue;
+		if (!c) continue;
 		*c = '\0';
-		int i = index_in_mem(buf); //questa è una delle mie peggiori zozzate
+		int i = index_in_mem(buf); //questa e' una delle mie peggiori zozzate
 		if (i >= 0) mem_as_array[i] = strtoul(c+1, NULL, 10);
 	}
 
@@ -150,12 +153,12 @@ float uptime(){
     if(!f) error("error in reading /proc/uptime");
     float res;
     assert(fscanf(f, "%f", &res) == 1 && "error in reading /proc/uptime");
+    fclose(f);
     return res;
 }
 
-void print_top(unsigned delay_ms, unsigned limit){
-    //cpu inf
-    //mem inf
+bool print_top(unsigned limit){
+    if(exit_cond) return 0;
     struct dirent **dir_entries;
     int res = scandir("/proc/", &dir_entries, is_digit, dirent_cmp_on_name);
     Process **processes = (Process**)malloc(sizeof(Process**)*res);
@@ -226,7 +229,11 @@ void print_top(unsigned delay_ms, unsigned limit){
     free(processes);
     free(cpu);
     free(mem);
-    
+    return 1;
+}
+
+void ctrlc_handler(int sig){
+    exit_cond = 1;
 }
 
 inline void wipe_terminal(){ write(STDOUT_FILENO, "\x1b\x5b\x48\x1b\x5b\x32\x4a\x1b\x5b\x33\x4a", 11); }
