@@ -22,8 +22,8 @@ int dirent_cmp_on_name(const struct dirent** a, const struct dirent** b){
 
 
 int cmp_on_cpu_usage(const void* a, const void* b){
-    const Process** ap = a;
-    const Process** bp = b;
+    const Process** const ap = (void*)a;
+    const Process** const bp = (void*)b;
     return  ((*bp)->cpu_percentage*100)-((*ap)->cpu_percentage*100);
 }
 
@@ -61,8 +61,10 @@ int is_digit(const struct dirent* a){
 }
 
 Cpu* get_cpu(){
-    Cpu* cpu = (Cpu*)malloc(sizeof(Cpu));
+    
     FILE* f = fopen("/proc/stat", "r");
+    if(!f) return NULL;
+    Cpu* cpu = (Cpu*)malloc(sizeof(Cpu));
     assert(fscanf(f, "cpu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu", 
                                     &cpu->user_time, 
                                     &cpu->userlow_time,
@@ -80,9 +82,11 @@ Cpu* get_cpu(){
 }
 
 Mem* get_mem(){
+    
+    FILE* f = fopen("/proc/meminfo", "r");
+    if(!f) return NULL;
     Mem* mem = (Mem*)malloc(sizeof(Mem));
     unsigned long *mem_as_array = (unsigned long *)mem;
-    FILE* f = fopen("/proc/meminfo", "r");
     char buf[100];
     while (fgets(buf, sizeof(buf), f) != NULL) {
 		char *c = strchr(buf, ':');
@@ -165,6 +169,7 @@ bool print_top(unsigned limit){
 
     Cpu* cpu = get_cpu();
     Mem* mem = get_mem();
+    if(!cpu  || !mem) error("can't get info on system");
     float system_uptime = uptime();
     unsigned long used_mem = mem->total-mem->free-mem->buffers-mem->cached;
     int tasks[5]={0,0,0,0,0};
